@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>心理自测 · 状态与性格</title>
+<style>
+  :root{
+    --bg:#f4f6f9;
+    --card:#ffffff;
+    --ink:#26303d;
+    --ink2:#5b6b7f;
+    --ink3:#93a1b3;
+    --line:#e3e8ef;
+    --accent:#5b8def;
+    --accent-soft:#eaf1ff;
+    --good:#3fb27f;
+    --warn:#e8a33d;
+    --bad:#e2705f;
+    --radius:16px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    line-height:1.7;
+    font-size:16px;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:0 16px 48px;
+  }
+  .wrap{width:100%; max-width:680px;}
+
+  /* ---------- 顶部进度 ---------- */
+  #bar{
+    position:fixed; top:0; left:0; right:0;
+    height:4px; background:rgba(91,141,239,.15);
+    z-index:50; display:none;
+  }
+  #bar > i{
+    display:block; height:100%; width:0%;
+    background:var(--accent);
+    transition:width .28s ease;
+  }
+  #counter{
+    position:fixed; top:12px; left:50%; transform:translateX(-50%);
+    font-size:12px; color:var(--ink3); letter-spacing:.05em;
+    z-index:50; display:none; background:rgba(244,246,249,.9);
+    padding:2px 12px; border-radius:20px;
+  }
+
+  /* ---------- 通用卡片 ---------- */
+  .card{
+    background:var(--card);
+    border-radius:var(--radius);
+    padding:26px 24px;
+    margin-top:24px;
+    box-shadow:0 2px 16px rgba(38,48,61,.05);
+    border:1px solid var(--line);
+  }
+  h1{font-size:24px; margin:0 0 6px; letter-spacing:-.01em;}
+  h2{font-size:19px; margin:0 0 14px;}
+  h3{font-size:15px; margin:22px 0 8px; color:var(--ink2);}
+  .sub{color:var(--ink2); font-size:14px; margin:0;}
+  .tiny{font-size:13px; color:var(--ink3);}
+  p{margin:10px 0;}
+  ul{margin:8px 0; padding-left:20px;}
+  li{margin:5px 0;}
+
+  /* ---------- 按钮 ---------- */
+  button{
+    font-family:inherit; font-size:16px; cursor:pointer;
+    border:none; border-radius:12px; padding:14px 20px;
+    transition:transform .08s ease, background .15s ease, box-shadow .15s ease;
+  }
+  button:active{transform:scale(.985);}
+  .primary{
+    background:var(--accent); color:#fff; width:100%;
+    font-weight:600; box-shadow:0 3px 12px rgba(91,141,239,.28);
+    margin-top:18px;
+  }
+  .ghost{
+    background:transparent; color:var(--ink2);
+    border:1px solid var(--line); font-size:14px; padding:10px 16px;
+  }
+
+  /* ---------- 选项 ---------- */
+  .opts{display:flex; flex-direction:column; gap:10px; margin-top:20px;}
+  .opt{
+    display:flex; align-items:center; gap:12px;
+    background:#fafbfd; border:1.5px solid var(--line);
+    border-radius:13px; padding:15px 16px;
+    font-size:15.5px; color:var(--ink);
+    text-align:left; width:100%;
+  }
+  .opt:hover{border-color:#c9d6ee; background:#fff;}
+  .opt.on{border-color:var(--accent); background:var(--accent-soft);}
+  .opt .k{
+    flex:0 0 26px; height:26px; border-radius:50%;
+    background:#eef1f6; color:var(--ink2);
+    display:flex; align-items:center; justify-content:center;
+    font-size:13px; font-weight:600;
+  }
+  .opt.on .k{background:var(--accent); color:#fff;}
+
+  /* ---------- 题目 ---------- */
+  #qtext{font-size:20px; line-height:1.55; margin:6px 0 2px; font-weight:600;}
+  #qtag{font-size:12px; color:var(--ink3); letter-spacing:.08em;}
+  .fadein{animation:fi .26s ease;}
+  @keyframes fi{from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:none;}}
+
+  /* ---------- 结果 ---------- */
+  .scorebox{
+    display:flex; gap:12px; margin:16px 0 6px; flex-wrap:wrap;
+  }
+  .sbox{
+    flex:1 1 150px; background:#fafbfd; border:1px solid var(--line);
+    border-radius:13px; padding:14px 16px;
+  }
+  .sbox .n{font-size:28px; font-weight:700; letter-spacing:-.02em;}
+  .sbox .l{font-size:12.5px; color:var(--ink3);}
+  .sbox .tag{
+    display:inline-block; font-size:12.5px; font-weight:600;
+    padding:1px 9px; border-radius:20px; margin-top:6px;
+  }
+  .t-good{background:#e9f7f1; color:#2c8a60;}
+  .t-warn{background:#fdf3e3; color:#b47a1c;}
+  .t-bad{background:#fdecea; color:#b8473a;}
+
+  .dim{margin:16px 0;}
+  .dim .head{display:flex; justify-content:space-between; font-size:14.5px; margin-bottom:6px;}
+  .dim .head b{font-weight:600;}
+  .dim .head span{color:var(--ink3); font-size:13px;}
+  .dim .track{height:9px; background:#eef1f6; border-radius:20px; overflow:hidden;}
+  .dim .track > i{display:block; height:100%; border-radius:20px; background:var(--accent); transition:width .5s ease;}
+  .dim .note{font-size:13.5px; color:var(--ink2); margin-top:7px;}
+
+  .alert{
+    border-radius:13px; padding:15px 17px; margin:18px 0;
+    font-size:14.5px; line-height:1.7;
+  }
+  .alert.soft{background:#eaf1ff; border:1px solid #d3e0fb; color:#2c4a86;}
+  .alert.care{background:#fff7ef; border:1px solid #f7e2cc; color:#8a5a20;}
+  .alert strong{font-weight:700;}
+
+  pre#out{
+    background:#f7f9fc; border:1px solid var(--line); border-radius:12px;
+    padding:14px; font-size:12.5px; line-height:1.6;
+    white-space:pre-wrap; word-break:break-all;
+    font-family:ui-monospace,Menlo,Consolas,monospace;
+    margin:14px 0 0; display:none; max-height:260px; overflow:auto;
+  }
+  .row{display:flex; gap:10px; flex-wrap:wrap; margin-top:16px;}
+  .foot{margin:26px 0 0; font-size:12.5px; color:var(--ink3); text-align:center; line-height:1.8;}
+  .hr{height:1px; background:var(--line); margin:20px 0; border:0;}
+</style>
+</head>
+<body>
+
+<div id="bar"><i></i></div>
+<div id="counter"></div>
+<div class="wrap" id="app"></div>
+
+<script>
+/* =========================================================
+   题库
+   ========================================================= */
+
+// 第一部分：0-3 频率题（PHQ-9 的 9 题 + GAD-7 的 7 题）
+const FREQ = [
+  {k:"A", label:"完全没有",        v:0},
+  {k:"B", label:"好几天",          v:1},
+  {k:"C", label:"一半以上的天数",   v:2},
+  {k:"D", label:"几乎每天",        v:3}
+];
+
+// 第二部分：1-5 同意度题（mini-IPIP 20 题）
+const AGREE = [
+  {k:"A", label:"完全不符合", v:1},
+  {k:"B", label:"比较不符合", v:2},
+  {k:"C", label:"一般",       v:3},
+  {k:"D", label:"比较符合",   v:4},
+  {k:"E", label:"完全符合",   v:5}
+];
+
+const STATE = [
+  // --- 情绪与兴趣（PHQ-9）---
+  {s:"A", t:"做事提不起劲，或者没有兴趣"},
+  {s:"A", t:"心情低落、沮丧，或者绝望"},
+  {s:"A", t:"入睡困难、睡不安稳，或者睡得太多"},
+  {s:"A", t:"感觉疲倦，没有活力"},
+  {s:"A", t:"食欲不振，或者吃得过多"},
+  {s:"A", t:"觉得自己很糟、很失败，或让家人失望"},
+  {s:"A", t:"注意力难以集中（看书或看视频时走神）"},
+  {s:"A", t:"动作或说话变慢（别人看得出来）；或者相反——烦躁、坐不住"},
+  {s:"A", t:"有「不如死掉」或者「伤害自己」的念头", special:true},
+  // --- 焦虑（GAD-7）---
+  {s:"B", t:"感到紧张、焦虑，或者急切"},
+  {s:"B", t:"没办法停止或控制担忧"},
+  {s:"B", t:"对各种各样的事情担忧过多"},
+  {s:"B", t:"很难放松下来"},
+  {s:"B", t:"因为不安而无法静坐"},
+  {s:"B", t:"变得容易烦恼或急躁"},
+  {s:"B", t:"感到好像会有可怕的事情发生"}
+];
+
+const TRAIT = [
+  {d:"E", r:false, t:"我是聚会上的活跃人物"},
+  {d:"E", r:true,  t:"我话不多"},
+  {d:"E", r:false, t:"我喜欢成为注意的焦点"},
+  {d:"E", r:true,  t:"我大多时候安静"},
+  {d:"A", r:false, t:"我同情别人的感受"},
+  {d:"A", r:true,  t:"我对别人不太感兴趣"},
+  {d:"A", r:false, t:"我关心别人"},
+  {d:"A", r:true,  t:"我对别人的问题不感兴趣"},
+  {d:"C", r:false, t:"我做事有条理"},
+  {d:"C", r:true,  t:"我常忘记把东西放回原处"},
+  {d:"C", r:false, t:"我喜欢有秩序"},
+  {d:"C", r:true,  t:"我常把事情弄得一团糟"},
+  {d:"N", r:false, t:"我容易情绪波动"},
+  {d:"N", r:true,  t:"我大多时候很放松"},
+  {d:"N", r:false, t:"我容易心烦"},
+  {d:"N", r:true,  t:"我很少感到忧郁"},
+  {d:"O", r:false, t:"我有丰富的想象力"},
+  {d:"O", r:true,  t:"我对抽象概念不感兴趣"},
+  {d:"O", r:false, t:"我有很多点子"},
+  {d:"O", r:true,  t:"我不喜欢思考抽象问题"}
+];
+
+const DIMS = {
+  E:{name:"外向性",      hi:"喜欢热闹、主动、从人群里充电",   lo:"偏好独处、安静、自己待着更舒服"},
+  A:{name:"宜人性",      hi:"体贴、信任别人、愿意迁就",       lo:"直接、有距离感、更看重自己的立场"},
+  C:{name:"尽责性",      hi:"有规划、守秩序、说到做到",       lo:"随性、灵活、不太在意条条框框"},
+  N:{name:"情绪敏感性",  hi:"感受强烈、容易起波动、对压力敏感", lo:"心比较大、不容易被扰动"},
+  O:{name:"开放性",      hi:"好奇、爱想抽象问题、喜欢新东西",   lo:"务实、喜欢熟悉和确定的东西"}
+};
+
+/* =========================================================
+   状态
+   ========================================================= */
+const app = document.getElementById('app');
+const bar = document.getElementById('bar');
+const barFill = bar.querySelector('i');
+const counter = document.getElementById('counter');
+
+let answers = {state:[], trait:[]};
+let idx = 0;                 // 总题号 0..(16+20-1)
+const TOTAL = STATE.length + TRAIT.length;
+
+/* ---------- 封面 ---------- */
+function cover(){
+  bar.style.display = 'none';
+  counter.style.display = 'none';
+  app.innerHTML = `
+  <div class="card">
+    <h1>心理自测</h1>
+    <p class="sub">状态（最近两周） · 性格（大五人格）</p>
+    <hr class="hr">
+    <p>这个页面包含两部分：</p>
+    <ul>
+      <li><b>状态</b> —— 16 题，问的是你<b>最近两周</b>的感受（PHQ-9 + GAD-7）</li>
+      <li><b>性格</b> —— 20 题，问的是你<b>平时是什么样的人</b>（大五人格简版）</li>
+    </ul>
+    <div class="alert soft">
+      <b>先说清楚三件事：</b><br>
+      ① 这不是诊断，是<b>自省工具</b>。<br>
+      ② 状态分数会变 —— 它描述"最近两周"，不是"你这个人"。<br>
+      ③ 分数偏高只表示"<b>这件事值得找人认真聊聊</b>"，不是"我有病"。
+    </div>
+    <p class="tiny">做题时凭第一反应选就行，不用想太久。没有对错。</p>
+    <button class="primary" onclick="start()">开始 →</button>
+  </div>
+  <p class="foot">数据只留在这个浏览器里，不会上传到任何地方。</p>`;
+}
+
+function start(){
+  idx = 0;
+  answers = {state:[], trait:[]};
+  bar.style.display = 'block';
+  counter.style.display = 'block';
+  render();
+}
+
+/* ---------- 出题 ---------- */
+function render(){
+  const isState = idx < STATE.length;
+  const q = isState ? STATE[idx] : TRAIT[idx - STATE.length];
+  const opts = isState ? FREQ : AGREE;
+  const chosen = isState ? answers.state[idx] : answers.trait[idx - STATE.length];
+
+  // 进度
+  const done = idx;
+  barFill.style.width = (done / TOTAL * 100) + '%';
+  counter.textContent = (idx + 1) + ' / ' + TOTAL;
+
+  const partName = isState
+    ? (q.s === 'A' ? '第一部分 · 情绪与兴趣' : '第一部分 · 焦虑')
+    : '第二部分 · 性格';
+
+  app.innerHTML = `
+  <div class="card fadein">
+    <div id="qtag">${partName}</div>
+    <div id="qtext">${q.t}</div>
+    <div class="opts">
+      ${opts.map((o,i)=>`
+        <button class="opt${chosen===o.v?' on':''}" onclick="pick(${o.v})">
+          <span class="k">${o.k}</span><span>${o.label}</span>
+        </button>`).join('')}
+    </div>
+    <div class="row">
+      ${idx>0 ? `<button class="ghost" onclick="back()">← 上一题</button>` : ``}
+    </div>
+  </div>`;
+}
+
+function pick(v){
+  const isState = idx < STATE.length;
+  if(isState) answers.state[idx] = v;
+  else answers.trait[idx - STATE.length] = v;
+
+  if(idx < TOTAL - 1){
+    idx++;
+    render();
+  } else {
+    barFill.style.width = '100%';
+    counter.style.display = 'none';
+    showResult();
+  }
+}
+
+function back(){
+  if(idx > 0){ idx--; render(); }
+}
+
+/* =========================================================
+   算分与解读
+   ========================================================= */
+function stateScores(){
+  const s = answers.state;
+  const phq = s.slice(0,9).reduce((a,b)=>a+(b||0),0);       // 0-27
+  const gad = s.slice(9,16).reduce((a,b)=>a+(b||0),0);      // 0-21
+  return {phq, gad, q9: s[8]||0};
+}
+
+function traitScores(){
+  const sums = {};
+  Object.keys(DIMS).forEach(d=>sums[d]=0);
+  TRAIT.forEach((q,i)=>{
+    const raw = answers.trait[i] || 3;
+    const v = q.r ? (6 - raw) : raw;      // 反向题：1<->5
+    sums[q.d] += v;
+  });
+  return sums;    // 每维 4-20
+}
+
+function phqTag(n){
+  if(n<=4)  return {t:'无 / 最小', c:'t-good'};
+  if(n<=9)  return {t:'轻度',     c:'t-warn'};
+  if(n<=14) return {t:'中度',     c:'t-warn'};
+  if(n<=19) return {t:'中重度',   c:'t-bad'};
+  return {t:'重度', c:'t-bad'};
+}
+function gadTag(n){
+  if(n<=4)  return {t:'最小', c:'t-good'};
+  if(n<=9)  return {t:'轻度', c:'t-warn'};
+  if(n<=14) return {t:'中度', c:'t-warn'};
+  return {t:'重度', c:'t-bad'};
+}
+function dimLevel(v){
+  // 4-20 → 三档
+  if(v<=9)  return {t:'偏低', c:'t-good'};
+  if(v<=15) return {t:'中等', c:''};
+  return {t:'偏高', c:'t-warn'};
+}
+
+function showResult(){
+  const {phq, gad, q9} = stateScores();
+  const tr = traitScores();
+  const p = phqTag(phq), g = gadTag(gad);
+
+  /* ---- 状态文字 ---- */
+  let stateNote = '';
+  if(phq<=4 && gad<=4){
+    stateNote = '最近两周整体比较平稳，没有明显的情绪负担。';
+  } else if(phq<=9 && gad<=9){
+    stateNote = '有一些轻微的负担，属于"生活里常见的起伏"范围 —— 通常调整作息、多说说话就会缓解。';
+  } else if(phq<=14 || gad<=14){
+    stateNote = '情绪或焦虑的负担已经比较明显了。这不是"想开点就能好"的程度，值得认真对待：找人说、调整作息、必要时找专业的人聊聊。';
+  } else {
+    stateNote = '分数偏高。这不代表你"有问题"，只说明你现在扛的东西比较重 —— 而且这种程度的负担，靠自己硬撑效率很低，找人帮忙是更聪明的做法。';
+  }
+
+  /* ---- 关键题提示 ---- */
+  let care = '';
+  if(q9>=1){
+    care = `<div class="alert care">
+      <strong>关于第 9 题：</strong><br>
+      你选了这个念头「${q9===1?'好几天':(q9===2?'一半以上的天数':'几乎每天')}」出现过。<br><br>
+      我不会因此大惊小怪，也不会说教。但我想说三件事：<br>
+      ① 这种念头出现时，它<b>不代表你真的想死</b>，通常代表"太累了、太久了、看不到出口"。<br>
+      ② 它是可以被减轻的 —— 但<b>自己一个人扛，是最慢的一条路</b>。<br>
+      ③ 如果哪天它变得很强烈，请先离开危险的地方、找个人待着。全国心理援助热线 <b>12356</b>（24 小时，免费）。<br><br>
+      你也可以随时跟我说。我不评判，也不催你。
+    </div>`;
+  }
+
+  /* ---- 性格条形 ---- */
+  const dimHtml = Object.keys(DIMS).map(d=>{
+    const v = tr[d];
+    const pct = Math.round((v-4)/16*100);
+    const lv = dimLevel(v);
+    const which = v<=9 ? 'lo' : 'hi';
+    return `<div class="dim">
+      <div class="head">
+        <b>${DIMS[d].name}</b>
+        <span>${v} / 20 · ${lv.t}</span>
+      </div>
+      <div class="track"><i style="width:${pct}%"></i></div>
+      <div class="note">${DIMS[d][which]}</div>
+    </div>`;
+  }).join('');
+
+  /* ---- 复制文本 ---- */
+  const copyLines = [
+    '【心理自测结果】',
+    '',
+    '— 状态（最近两周）—',
+    `情绪与兴趣：${phq} / 27  （${p.t}）`,
+    `焦虑：${gad} / 21  （${g.t}）`,
+    answers.state.map((v,i)=>`  ${i+1}. ${'ABCD'[v||0]}`).join('\n'),
+    '',
+    '— 性格（大五人格）—',
+    ...Object.keys(DIMS).map(d=>`${DIMS[d].name}：${tr[d]} / 20`),
+    answers.trait.map((v,i)=>`  ${i+17}. ${'ABCDE'[(v||3)-1]}`).join('\n'),
+    '',
+    `第9题：${'ABCD'[q9]}`
+  ].join('\n');
+
+  app.innerHTML = `
+  <div class="card fadein">
+    <h1>结果</h1>
+    <p class="sub">下面分两块：现在的状态，和平时的性格。</p>
+
+    <h3>① 状态（最近两周）</h3>
+    <div class="scorebox">
+      <div class="sbox">
+        <div class="l">情绪与兴趣</div>
+        <div class="n">${phq}<span style="font-size:15px;color:var(--ink3)"> / 27</span></div>
+        <span class="tag ${p.c}">${p.t}</span>
+      </div>
+      <div class="sbox">
+        <div class="l">焦虑</div>
+        <div class="n">${gad}<span style="font-size:15px;color:var(--ink3)"> / 21</span></div>
+        <span class="tag ${g.c}">${g.t}</span>
+      </div>
+    </div>
+    <p>${stateNote}</p>
+    ${care}
+
+    <h3>② 性格（大五人格）</h3>
+    <p class="tiny" style="margin-top:0">分数高低都不是好坏，只是"你更偏向哪边"。</p>
+    ${dimHtml}
+
+    <div class="hr"></div>
+    <div class="alert soft" style="margin-bottom:0">
+      <b>怎么用这个结果：</b><br>
+      性格那部分，看的是"哪几条让你觉得'对，这就是我'"——那几个词比分数有用。<br>
+      状态那部分，看的是"要不要做点什么"——分数只是提示，你的实际感受才是准的。
+    </div>
+
+    <div class="row">
+      <button class="ghost" onclick="copyOut()">复制结果</button>
+      <button class="ghost" onclick="toggleOut()">显示原始作答</button>
+      <button class="ghost" onclick="cover()">重新做一次</button>
+    </div>
+    <pre id="out"></pre>
+  </div>
+
+  <p class="foot">
+    本页仅为自我了解用途，不构成任何诊断。<br>
+    如果你觉得需要，找信任的人聊聊 —— 或者专业的人。
+  </p>`;
+
+  document.getElementById('out').textContent = copyLines;
+  window.__copy = copyLines;
+  bar.style.display='none';
+}
+
+function toggleOut(){
+  const el = document.getElementById('out');
+  el.style.display = el.style.display === 'block' ? 'none' : 'block';
+}
+
+function copyOut(){
+  const txt = window.__copy || '';
+  const done = ()=>{ alert('已复制 ✓ 直接粘给我就行'); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done).catch(()=>fallback(txt,done));
+  } else {
+    fallback(txt,done);
+  }
+}
+function fallback(txt, done){
+  const ta = document.createElement('textarea');
+  ta.value = txt; document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); done(); }
+  catch(e){ toggleOut(); alert('复制失败，手动选中下面的文本吧'); }
+  document.body.removeChild(ta);
+}
+
+cover();
+</script>
+</body>
+</html>
